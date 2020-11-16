@@ -1,5 +1,6 @@
 package com.coku.demo;
 
+import com.coku.annotation.AutoInject;
 import com.coku.annotation.AutoRequest;
 
 import io.reactivex.Observable;
@@ -13,6 +14,8 @@ import retrofit2.http.GET;
  * @date 2020/11/16.
  * @email coku_lwp@126.com
  */
+
+@AutoInject
 public interface HomeApi {
 
     @AutoRequest
