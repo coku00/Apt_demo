@@ -19,6 +19,21 @@ dependencies {
     implementation "com.google.guava:guava:24.1-jre"
 
     implementation files(Jvm.current().toolsJar)
+
+
+
+//    annotationProcessor 'com.squareup.okhttp3:okhttp:3.9.1'
+//    annotationProcessor 'com.squareup.retrofit2:retrofit:2.3.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.3.0'
+    //ConverterFactory的Gson依赖包
+//    annotationProcessor 'com.squareup.retrofit2:converter-gson:2.3.0'
+//    //CallAdapterFactory的Rx依赖包
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'
+
+    implementation project(":apt-lib")
+//
+//    annotationProcessor 'io.reactivex.rxjava2:rxandroid:2.0.2'
+
 }
 
 sourceCompatibility = "1.8"

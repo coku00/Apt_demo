@@ -31,6 +31,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
     implementation project(":apt-annotation")
+    implementation project(":apt-lib")
     annotationProcessor project(":apt-compiler")
 
     implementation 'com.squareup.retrofit2:retrofit:2.6.4'//retrofit
