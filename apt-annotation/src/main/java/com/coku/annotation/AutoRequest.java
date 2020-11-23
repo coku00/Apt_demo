@@ -10,10 +10,11 @@ import java.lang.annotation.Target;
  * @desc
  * @date 2020/11/16.
  * @email coku_lwp@126.com
+ *
  */
 
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)
 public @interface AutoRequest {
-    String value();
+    String className();
 }

@@ -21,7 +21,11 @@ public class MainActivity extends AppCompatActivity {
             Class clazz = Class.forName("com.coku.demo.$UserApi");
 
             Retrofit retrofit = null;
-            Observable<Login> observable = retrofit.create(HomeApi.class).logout(null);
+            Observable<Login<String>> observable = retrofit.create(HomeApi.class).logout(null);
+
+
+
+
 
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

@@ -1,5 +1,5 @@
 package com.coku.demo;
-import com.coku.annotation.AutoInject;
+import com.coku.annotation.BuildClass;
 import com.coku.annotation.AutoRequest;
 import com.coku.tmt.Login;
 
@@ -15,10 +15,10 @@ import retrofit2.http.GET;
  */
 
 
-@AutoInject
+@BuildClass
 public interface UserApi {
 
-    @AutoRequest("com.coku.demo.UserApi")
+    @AutoRequest(className = "com.coku.demo.UserApi")
     @GET("/a/b/c")
     Observable<Login> login(@Field("name") String name, @Field("age") int age);
 

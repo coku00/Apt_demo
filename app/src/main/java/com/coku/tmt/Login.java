@@ -6,5 +6,5 @@ package com.coku.tmt;
  * @date 2020/11/16.
  * @email coku_lwp@126.com
  */
-public class Login {
+public class Login<T> {
 } 

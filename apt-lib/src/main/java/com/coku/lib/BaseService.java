@@ -1,15 +1,23 @@
 package com.coku.lib;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.ObservableTransformer;
+import io.reactivex.Scheduler;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 
-
-public class BaseService<T extends Class<?>> {
+public class BaseService {
     protected Retrofit mRetrofit;
     private CompositeDisposable mCompositeDisposable;
 
-    public BaseService(RetrofitFactory factory) {
-        this.mRetrofit = factory.created();
+    public BaseService(Retrofit retrofit) {
+        this.mRetrofit = retrofit;
     }
 
     public Retrofit getRetrofit(){
@@ -33,4 +41,42 @@ public class BaseService<T extends Class<?>> {
             this.mCompositeDisposable.dispose();
         }
     }
+
+    public<T> ObservableTransformer<T,T> transformer() {
+
+
+
+        return new ObservableTransformer<T,T>(){
+            @Override
+            public ObservableSource<T> apply(Observable<T> upstream) {
+                return upstream.subscribeOn(Schedulers.io())
+                        .observeOn(mainScheduler());
+            }
+        };
+    }
+
+    private Scheduler mainScheduler(){
+
+        Scheduler scheduler = null;
+
+        try {
+            Class mainSchedulerClass = Class.forName("io.reactivex.android.schedulers.AndroidSchedulers");
+
+            Method method = mainSchedulerClass.getMethod("mainThread");
+
+            scheduler = (Scheduler) method.invoke(null);
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+        return scheduler;
+    }
+
 }
