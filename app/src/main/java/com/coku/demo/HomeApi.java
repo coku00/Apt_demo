@@ -1,21 +1,24 @@
 package com.coku.demo;
 
-import com.coku.annotation.BuildClass;
-import com.coku.annotation.AutoRequest;
+import com.coku.annotation.AutoClass;
+import com.coku.annotation.AutoMethod;
 import com.coku.tmt.Login;
+import com.coku.tmt.UserInfo;
 
 import io.reactivex.Observable;
+import okhttp3.Response;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.POST;
 
-@BuildClass
+@AutoClass
 public interface HomeApi {
 
-    @AutoRequest(className = "com.coku.demo.HomeApi")
-    @GET("/a/b/c")
-    Observable<Login<String>> logout(@Body Login login);
+    @AutoMethod(className = "com.coku.demo.HomeApi")
+    @GET("/app/logout")
+    Observable<Response> logout();
 
-    @AutoRequest(className = "com.coku.demo.HomeApi")
-    @GET("/a/b/c")
-    Observable<Login<String>> query();
+    @AutoMethod(className = "com.coku.demo.HomeApi")
+    @GET("/api/user/userStatus.htm")
+    Observable<Object> query();
 }

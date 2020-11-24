@@ -7,7 +7,18 @@ package com.coku.lib;
  * @email coku_lwp@126.com
  */
 public class TError extends Throwable{
+    String code;
+    String message;
     public TError(String code, String message) {
+        this.code = code;
+        this.message = message;
+    }
 
+    @Override
+    public String toString() {
+        return "TError{" +
+                "code='" + code + '\'' +
+                ", message='" + message + '\'' +
+                '}';
     }
 }

@@ -1,9 +1,8 @@
 package com.coku.compiler;
 
-import com.coku.annotation.BuildClass;
-import com.coku.annotation.AutoRequest;
+import com.coku.annotation.AutoClass;
+import com.coku.annotation.AutoMethod;
 
-import com.coku.lib.RequestCallback;
 import com.coku.lib.BaseService;
 import com.coku.lib.TargetObserver;
 import com.google.auto.service.AutoService;
@@ -12,7 +11,6 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.sun.tools.javac.code.Type;
 
@@ -35,13 +33,8 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.ObservableTransformer;
-import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 
 /**
@@ -51,6 +44,7 @@ import retrofit2.Retrofit;
  * @email coku_lwp@126.com
  *
  * https://juejin.cn/post/6844903456629587976
+ * https://www.coder.work/article/2818864
  */
 
 @AutoService(Processor.class)
@@ -78,11 +72,11 @@ public class AutoRequestProcessor extends AbstractProcessor {
         messager.printMessage(Diagnostic.Kind.NOTE, "start:");
 
 
-        Set<? extends Element> methodElements = environment.getElementsAnnotatedWith(AutoRequest.class);
+        Set<? extends Element> methodElements = environment.getElementsAnnotatedWith(AutoMethod.class);
 
         createMethodWithElement(methodElements, environment);
 
-        Set<? extends Element> classElements = environment.getElementsAnnotatedWith(BuildClass.class);
+        Set<? extends Element> classElements = environment.getElementsAnnotatedWith(AutoClass.class);
 
         createDisPatchInterfaceWithElement(classElements, environment);
 
@@ -105,25 +99,20 @@ public class AutoRequestProcessor extends AbstractProcessor {
 
             String packageName = classType.tsym.toString().split("." + originalClassName)[0];
 
-
-
             // 定义一个名字叫 xxx 的类
             TypeSpec.Builder disPath = TypeSpec.interfaceBuilder("$" + originalClassName + "DisPatch");
             // 声明为 public 的
             disPath.addModifiers(Modifier.PUBLIC);
             // 为这个类加入一段注释
             disPath.addJavadoc("自动生成的接口，请勿更改");
-
             List<Element> list = methodElementMap.get(packageName +"."+ originalClassName);
             if(list != null){
-
                 List<MethodSpec> methods = new ArrayList<>();
 
                 for (int i = 0; i < list.size(); i++) {
                     Element element =  list.get(i);
                     String methodName = element.getSimpleName().toString();
 
-                    // 创建一个方法，返回 List<Class>
                     MethodSpec method = createDisPatchMethodWithElements(element, methodName,classType);
                     methods.add(method);
                 }
@@ -131,17 +120,12 @@ public class AutoRequestProcessor extends AbstractProcessor {
                 disPath.addMethods(methods);
 
 
-
-
             }else{
                 messager.printMessage(Diagnostic.Kind.NOTE, "list == null:");
             }
 
 
-
             TypeSpec clazzSpec = disPath.build();
-
-            System.out.println("TypeSpec = "+clazzSpec.name);
 
             clazzInterface.put(packageName +"."+ originalClassName,clazzSpec);
 
@@ -168,13 +152,14 @@ public class AutoRequestProcessor extends AbstractProcessor {
         builder.returns(ParameterizedTypeName.get(TargetObserver.class));
 
 
-        int a = 0;
+        int var = 0;
+
+        ClassName className =  ClassName.get("com.coku.lib","RequestCallback");
+        ParameterizedTypeName parameterizedTypeName = ParameterizedTypeName.get(className,
+                ParameterizedTypeName.get(type.getReturnType().getTypeArguments().get(0)));
 
 
-        TypeName typeName = ParameterizedTypeName.get(RequestCallback.class,Object.class);
-
-
-        builder.addParameter(typeName,String.valueOf("var" + (++a)), new Modifier[]{}).build();
+        builder.addParameter(parameterizedTypeName,String.valueOf("var" + (++var)), new Modifier[]{}).build();
 
 
         return builder.build();
@@ -187,7 +172,7 @@ public class AutoRequestProcessor extends AbstractProcessor {
 
         while (methodIterator.hasNext()) {
             Element methodElement = methodIterator.next();
-            AutoRequest autoRequest = methodElement.getAnnotation(AutoRequest.class);
+            AutoMethod autoRequest = methodElement.getAnnotation(AutoMethod.class);
             List<Element> list = methodElementMap.get(autoRequest.className());
             if(list == null){
                 list = new ArrayList<>();
@@ -214,7 +199,7 @@ public class AutoRequestProcessor extends AbstractProcessor {
 
 
             // 定义一个名字叫 xxx 的类
-            TypeSpec.Builder autoRequestService = TypeSpec.classBuilder("$" + originalClassName);
+            TypeSpec.Builder autoRequestService = TypeSpec.classBuilder("$" + originalClassName+"Service");
             // 声明为 public 的
             autoRequestService.addModifiers(Modifier.PUBLIC);
             autoRequestService.superclass(BaseService.class);
@@ -240,13 +225,13 @@ public class AutoRequestProcessor extends AbstractProcessor {
 
                 ClassName className = ClassName.get(packageName,"$" + originalClassName + "DisPatch");
 
-                autoRequestService.addField(className,"disPatch",new Modifier[]{});
+                autoRequestService.addField(className,"disPatch", Modifier.PRIVATE);
 
 
                 MethodSpec methodSpec = MethodSpec.constructorBuilder()
                         .addModifiers(Modifier.PUBLIC)
-                        .addParameter(ParameterizedTypeName.get(Retrofit.class),"retrofit",new Modifier[]{})
-                        .addParameter(className,"disPatch",new Modifier[]{})
+                        .addParameter(ParameterizedTypeName.get(Retrofit.class),"retrofit")
+                        .addParameter(className,"disPatch")
                         .addStatement("super(retrofit)")
                         .addStatement("this.disPatch = disPatch")
                         .build();
@@ -276,8 +261,8 @@ public class AutoRequestProcessor extends AbstractProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         Set set = new HashSet();
-        set.add(AutoRequest.class.getCanonicalName());
-        set.add(BuildClass.class.getCanonicalName());
+        set.add(AutoMethod.class.getCanonicalName());
+        set.add(AutoClass.class.getCanonicalName());
         return set;
     }
 
@@ -316,29 +301,49 @@ public class AutoRequestProcessor extends AbstractProcessor {
 
         Type.ClassType returnClassType = (Type.ClassType) type.getReturnType();
 
-        messager.printMessage(Diagnostic.Kind.NOTE, "arg getModelType = "+ returnClassType.getParameterTypes());
 
-        TypeName t = ClassName.get(returnClassType);
+        Type t = returnClassType.getTypeArguments().get(0);
+
+        messager.printMessage(Diagnostic.Kind.NOTE,"ClassName  t = " +  t);
+        if(!t.getTypeArguments().isEmpty()){
+            messager.printMessage(Diagnostic.Kind.NOTE,"ClassName  ... = " +  t.getTypeArguments());
+        }
+
+
+
+//        String s = returnClassType.toString().split("io.reactivex.Observable")[1];
+//        s = s.substring(1,s.length() - 1);
+
+
 
 
         try{
-            messager.printMessage(Diagnostic.Kind.NOTE,"TypeName = " + t.getClass());
+       //    messager.printMessage(Diagnostic.Kind.NOTE,"ClassName = " +  s);
+         //   messager.printMessage(Diagnostic.Kind.NOTE,"returnClassType = " + s);
 
         }catch (Exception e){
             e.printStackTrace();
         }
 
 
-        TypeName typeName = ParameterizedTypeName.get(RequestCallback.class,Object.class);
-        builder.addParameter(typeName,String.valueOf("var" + (++a)), new Modifier[]{}).build();
-        builder.beginControlFlow("if(disPatch == null || getRetrofit() == null)");
-        builder.addStatement("addSubscribe(getRetrofit().create("+classType.tsym.getSimpleName()+".class)."+ methodName + "("+buildArgs(type.argtypes)+").compose(transformer()).subscribeWith(this.disPatch." + methodName+"(var"+ a +")))");
+
+
+        ClassName className =  ClassName.get("com.coku.lib","RequestCallback");
+
+        ParameterizedTypeName parameterizedTypeName = ParameterizedTypeName.get(className,
+                ParameterizedTypeName.get(t));
+
+        builder.addParameter(parameterizedTypeName,String.valueOf("var" + (++a)), new Modifier[]{}).build();
+        builder.beginControlFlow("if(disPatch != null && getRetrofit() != null)");
+        builder.addStatement("addSubscribe(" +
+                "getRetrofit()" +"\n"+
+                ".create("+classType.tsym.getSimpleName()+".class)" +"\n"+
+                "."+ methodName + "("+buildArgs(type.argtypes)+")" +"\n"+
+                ".compose(transformer())" +"\n"+
+                ".subscribeWith(" +
+                "this.disPatch" +
+                "." + methodName+"(var"+ a +")))");
         builder.endControlFlow();
-
-
-
-
-
 
         return builder.build();
     }
@@ -347,11 +352,11 @@ public class AutoRequestProcessor extends AbstractProcessor {
         StringBuilder sb = new StringBuilder();
 
 
-        int a = 0;
+        int var = 0;
 
         for (int i = 0; i <argtypes.size();i++) {
 
-            sb.append("var").append(++a);
+            sb.append("var").append(++var);
 
             if(i != argtypes.size() - 1){
                 sb.append(",") ;
@@ -377,4 +382,6 @@ public class AutoRequestProcessor extends AbstractProcessor {
             e.printStackTrace();
         }
     }
+
+
 }

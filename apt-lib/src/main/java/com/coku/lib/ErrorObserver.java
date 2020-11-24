@@ -99,7 +99,7 @@ public abstract class ErrorObserver<T> extends DisposableObserver<T> {
     }
 
     public void onError(Throwable e) {
-        this.onError(e);
+       this.onError(new TError("999",e.getMessage()));
     }
 
     public void onError(String code, String message) {

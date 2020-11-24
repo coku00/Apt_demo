@@ -1,6 +1,6 @@
 package com.coku.demo;
-import com.coku.annotation.BuildClass;
-import com.coku.annotation.AutoRequest;
+import com.coku.annotation.AutoClass;
+import com.coku.annotation.AutoMethod;
 import com.coku.tmt.Login;
 
 import io.reactivex.Observable;
@@ -15,10 +15,10 @@ import retrofit2.http.GET;
  */
 
 
-@BuildClass
+@AutoClass
 public interface UserApi {
 
-    @AutoRequest(className = "com.coku.demo.UserApi")
+    @AutoMethod(className = "com.coku.demo.UserApi")
     @GET("/a/b/c")
     Observable<Login> login(@Field("name") String name, @Field("age") int age);
 

@@ -24,9 +24,6 @@ public class BaseService {
         return mRetrofit;
     }
 
-
-
-
     protected void addSubscribe(Disposable subscription) {
         if (this.mCompositeDisposable == null || this.mCompositeDisposable.isDisposed()) {
             this.mCompositeDisposable = new CompositeDisposable();
@@ -43,8 +40,6 @@ public class BaseService {
     }
 
     public<T> ObservableTransformer<T,T> transformer() {
-
-
 
         return new ObservableTransformer<T,T>(){
             @Override
@@ -66,13 +61,10 @@ public class BaseService {
 
             scheduler = (Scheduler) method.invoke(null);
 
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
+        } catch (ClassNotFoundException
+                | NoSuchMethodException
+                | IllegalAccessException
+                | InvocationTargetException e) {
             e.printStackTrace();
         }
 
